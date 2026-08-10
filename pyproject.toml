@@ -52,7 +52,7 @@ dev = [
     "black>=24.0.0",
     "ruff>=0.2.0",
     "mypy>=1.8.0",
-    "pre-commit>=3.6.0",
+    "pre-commit>=4.6.1",
 ]
 postgres = ["asyncpg>=0.29.0", "psycopg2-binary>=2.9.9"]
 mysql = ["aiomysql>=0.2.0", "pymysql>=1.1.0"]
