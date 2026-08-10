@@ -1,0 +1,5 @@
+---
+# Ansible playbook: monitor SwarmForge
+- name: monitor SwarmForge
+  hosts: all
+  tasks: []

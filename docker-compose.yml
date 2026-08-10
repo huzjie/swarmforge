@@ -1,0 +1,100 @@
+version: "3.8"
+
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - SWARMFORGE_ENV=production
+      - SWARMFORGE_DATABASE_URL=postgresql+asyncpg://swarmforge:swarmforge@postgres:5432/swarmforge
+      - SWARMFORGE_REDIS_URL=redis://redis:6379/0
+      - SWARMFORGE_SECRET_KEY=${SWARMFORGE_SECRET_KEY:-change-me-in-production}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+
+  worker:
+    build: .
+    command: celery -A swarmforge.tasks.celery_app worker --loglevel=info --concurrency=4
+    environment:
+      - SWARMFORGE_ENV=production
+      - SWARMFORGE_DATABASE_URL=postgresql+asyncpg://swarmforge:swarmforge@postgres:5432/swarmforge
+      - SWARMFORGE_REDIS_URL=redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  scheduler:
+    build: .
+    command: celery -A swarmforge.tasks.celery_app beat --loglevel=info
+    environment:
+      - SWARMFORGE_ENV=production
+      - SWARMFORGE_DATABASE_URL=postgresql+asyncpg://swarmforge:swarmforge@postgres:5432/swarmforge
+      - SWARMFORGE_REDIS_URL=redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=swarmforge
+      - POSTGRES_PASSWORD=swarmforge
+      - POSTGRES_DB=swarmforge
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U swarmforge"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./deploy/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+volumes:
+  postgres_data:
+  prometheus_data:
+  grafana_data:

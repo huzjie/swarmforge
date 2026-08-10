@@ -1,0 +1,1 @@
+"""SwarmForge API — FastAPI REST interface."""

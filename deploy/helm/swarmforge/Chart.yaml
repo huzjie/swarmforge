@@ -1,0 +1,14 @@
+apiVersion: v2
+name: swarmforge
+description: Multi-Agent Swarm Orchestration Platform
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - ai
+  - agent
+  - swarm
+  - multi-agent
+  - llm
+maintainers:
+  - name: AI Daily Agent

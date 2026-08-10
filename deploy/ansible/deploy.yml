@@ -1,0 +1,5 @@
+---
+# Ansible playbook: deploy SwarmForge
+- name: deploy SwarmForge
+  hosts: all
+  tasks: []
